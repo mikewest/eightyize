@@ -1,0 +1,3 @@
+This is a file that already has multiple short lines.
+
+There should be multiple lines once it's been columnized.

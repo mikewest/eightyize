@@ -1,0 +1,7 @@
+This is a long line that ought to be wrapped once columnize is run with it as
+input, and I hope it works.
+
+Especially when dealing with multiple lines, this sort of thing is a tiny bit
+more difficult than it would be otherwise. I wonder what happens when one line
+should wrap to THREE lines. Wouldn't that be something AMAZING? I bet it would
+be.
