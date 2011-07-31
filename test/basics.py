@@ -89,3 +89,17 @@ class TestColumnizer(unittest.TestCase):
     def test_unordered_list(self):
         self.columnize('unordered-list',
                        'Unordered lists should be properly wrapped.')
+
+    def test_unordered_list_multiple(self):
+        self.columnize('unordered-list-multiple',
+                       ('Multiple unordered list items should be properly '
+                        'wrapped.'))
+
+    def test_unordered_list_multiple_nospace(self):
+        self.columnize('unordered-list-multiple-nospace',
+                       ('Multiple unordered list items without breaking '
+                        'newlinesshould be properly wrapped.'))
+
+    def test_unordered_list_then_text(self):
+        self.columnize('unordered-list-then-text',
+                       'Multiple unordered list items with normal text.')

@@ -52,9 +52,19 @@ class Columnizer(object):
 
         index = "".join(self.line_[:self.columns_]).rfind(' ')
         if index is not -1:
-            self.output_.append("".join(self.line_[:index]).rstrip())
-            self.line_ = self.line_[index+1:]
-            self.wrapped_line_ = True
+            if self.state_ in [State.TEXT, State.EOF]:
+                self.output_.append("".join(self.line_[:index]).rstrip())
+                self.line_ = self.line_[index+1:]
+                self.wrapped_line_ = True
+            elif self.state_ in [State.UNORDERED_LIST, State.ORDERED_LIST]:
+                # TODO: ugly, cleanup.
+                self.output_.append("".join(self.line_[:index]).rstrip())
+                temp = self.line_[index+1:]
+                self.line_ = [' ', ' ', ' ', ' ']
+                self.line_.extend(temp)
+                self.wrapped_line_ = True
+
+
 
     def columnize(self, text):
         proc = TextProcessor(text)
@@ -65,26 +75,25 @@ class Columnizer(object):
             # State changes only happen at the beginning and end of the
             # document, or at the beginning of a line after an empty line.
             if char is TextProcessor.EOF:
-                state = State.EOF
+                self.state_ = State.EOF
             elif ((len(self.output_) is 0 and len(self.line_) is 0) or
                   (len(self.line_) is 0 and self.output_[-1] is "")):
-                print "switchable"
                 # Switch to unordered-list mode if the character is '*',
                 # and the next character is whitespace.
-                print "%d, %s, %s" % (len(self.line_), char, proc.peek())
                 if (len(self.line_) is 0 and char is '*' and
                     proc.peek().isspace()):
-                    state = State.UNORDERED_LIST
+                    self.state_ = State.UNORDERED_LIST
                 else:
-                    state = State.TEXT
+                    self.state_ = State.TEXT
 
             # When we hit the first space after the wrapping point, call
             # `wrap()` to process the current string, then add the
             # character.
-            if (state is State.EOF or char.isspace()) and len(self.line_) > self.columns_:
+            if ((self.state_ is State.EOF or char.isspace()) and
+                len(self.line_) > self.columns_):
                 self.wrap()
 
-            if state is State.TEXT:
+            if self.state_ is State.TEXT:
                 # If we've grabbed a newline character, we're done with this
                 # line. Strip trailing whitespace, save it off and start
                 # another. Don't append this newline to the output if we've
@@ -99,37 +108,21 @@ class Columnizer(object):
                 # to the current line, and move on to the next character.
                 else:
                     self.line_.append(char)
-            elif state is State.UNORDERED_LIST:
-                if char is '*' and len(self.line_) is 0:
+            elif self.state_ is State.UNORDERED_LIST:
+                if char == '*' and len(self.line_) is 0:
                     # Set up proper spacing
-                    self.line = "*   "
+                    if len(self.output_) and self.output_[-1] is not "":
+                        self.output_.append("")
+                    self.line_ = [ '*', ' ', ' ', ' ']
                     while proc.peek().isspace():
                         proc.next()
-                state = State.TEXT
-
-        self.output_.append("".join(self.line_).rstrip())
-        return "\n".join(self.output_).rstrip()
-"""
-        self.output_ = []
-        self.line_ = []
-        self.wrapped_line_ = False
-        
-        state = State.TEXT
-
-        for char in text:
-            if char.isspace() and len(self.line_) > self.columns_:
-                self.wrap()
-            if char == '\n':
-                temp = "".join(self.line_).rstrip()
-                if not self.wrapped_line_ or len(temp) > 0:
+                elif char == '\n':
+                    if len(self.line_) is 0 and self.output_[-1] is "":
+                        self.state_ = State.TEXT
                     self.output_.append("".join(self.line_).rstrip())
-                self.line_ = []
-                self.wrapped_line_ = False
-            else:
-                self.line_.append(char)
-        if len(self.line_) > self.columns_:
-            self.wrap()
+                    self.line_ = []
+                else:
+                    self.line_.append(char)
+
         self.output_.append("".join(self.line_).rstrip())
         return "\n".join(self.output_).rstrip()
-"""
-
