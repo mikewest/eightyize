@@ -26,34 +26,66 @@ class TestColumnizer(unittest.TestCase):
         with open(os.path.join(FIXTURES, name, 'expected.txt'), 'r') as f:
             self.out_ = f.read().rstrip()
 
+    def debugPrint(self, text):
+        return text.replace(' ', '+').replace('\n', '\\n\n')
+
     def columnize(self, name, msg):
         self.getFixtures(name)
+        print '\n>>> Expected:\n%s\n\n>>> Actual:\n%s' % (
+                self.debugPrint(self.out_),
+                self.debugPrint(self.cols_.columnize(self.in_)))
         self.assertEqual(self.out_, self.cols_.columnize(self.in_), msg)
+
+#
+# Unit Tests
+#
+    def test_wrap(self):
+        # Shorter columns for easier testing
+        col = Columnizer(10)
+        col.line_ = '0 2 4 6 8 0 '
+        col.wrap()
+        self.assertEqual('0 ', col.line_)
+
+        col.line_ = '0 2 4 6 8 0'
+        col.wrap()
+        self.assertEqual('0', col.line_)
+
+        col.line_ = '0 2 4 6 8 '
+        col.wrap()
+        self.assertEqual('0 2 4 6 8 ', col.line_)
+
 #
 # Plain text
 #
     def test_empty(self):
-        self.columnize('00-empty', 
+        self.columnize('empty', 
                        'Columnizing an empty string returns an empty string')
 
     def test_oneline_short(self):
-        self.columnize('01-oneline-short',
+        self.columnize('oneline-short',
                        ('Columnizing an 80 character string returns '
                         'the same string'))
 
     def test_oneline_long(self):
-        self.columnize('02-oneline-long',
+        self.columnize('oneline-long',
                   ('Columnizing a 80+ character string returns multiple 80- '
                    'character strings'))
 
     def test_whitespace(self):
-        self.columnize('03-whitespace',
+        self.columnize('whitespace',
                        'Lines should be stripped of trailing whitespace.')
 
     def test_multiline_short(self):
-        self.columnize('04-multiline-short',
+        self.columnize('multiline-short',
                        'Lines under 80 characters should remain the same.')
 
     def test_multiline_long(self):
-        self.columnize('05-multiline-long',
+        self.columnize('multiline-long',
                        'Lines over 80 characters should be wrapped.')
+
+#
+# Markdown
+#
+    def test_unordered_list(self):
+        self.columnize('unordered-list',
+                       'Unordered lists should be properly wrapped.')
