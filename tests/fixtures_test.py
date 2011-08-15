@@ -115,3 +115,7 @@ class TestColumnizer(unittest.TestCase):
     def test_text_then_multiline_pre(self):
         self.columnize('text-then-multiline-pre',
                        'Text followed by multiple lines of preformatted text.')
+
+    def test_link_references(self):
+        self.columnize('link-references',
+                       'Link references.')

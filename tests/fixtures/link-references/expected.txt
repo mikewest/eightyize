@@ -1,0 +1,6 @@
+This is a [paragraph with a link][link].
+
+This is [another][].
+
+[link]: http://example.com/with/a/path/that/is/long/enough/to/wrap/even/though/we/would/prefer/not/to/wrap.html
+[another]: http://another.example.com/with/a/path/that/is/long/enough/to/wrap/even/though/we/would/prefer/not/to/wrap.html

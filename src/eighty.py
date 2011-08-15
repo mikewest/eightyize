@@ -14,7 +14,9 @@ class State(object):
     UNORDERED_LIST = 1
     ORDERED_LIST = 2
     PREFORMATTED = 3
-    EOF = 4
+    LINK = 4
+    EOF = 5
+    EOF_NOWRAP = 6
 
 class TextProcessor(object):
     EOF = -1
@@ -52,10 +54,7 @@ class Columnizer(object):
         # Return straight away if we're either in Preformatted mode, or the
         # line is shorter than the desired column length.
         if (len(self.line_) <= self.columns_ or
-            self.state_ is State.PREFORMATTED):
-            return []
-
-        if self.state_ is State.PREFORMATTED:
+            self.state_ in [State.PREFORMATTED, State.LINK, State.EOF_NOWRAP]):
             return []
 
         index = "".join(self.line_[:self.columns_]).rfind(' ')
@@ -81,7 +80,10 @@ class Columnizer(object):
             # State changes only happen at the beginning and end of the
             # document, or at the beginning of a line after an empty line.
             if char is TextProcessor.EOF:
-                self.state_ = State.EOF
+                if self.state_ in [State.PREFORMATTED, State.LINK]:
+                    self.state_ = State.EOF_NOWRAP
+                else:
+                    self.state_ = State.EOF
             elif ((len(self.output_) is 0 and len(self.line_) is 0) or
                   (len(self.line_) is 0 and self.output_[-1] is "")):
                 # Switch to unordered-list mode if the character is '*',
@@ -97,20 +99,23 @@ class Columnizer(object):
                 # Switch to preformatted mode if the line starts with at least
                 # four spaces.
                 elif char.isspace() and proc.peek(3) == '   ':
-                    print "Preformatted!"
                     self.state_ = State.PREFORMATTED
+                # Switch to link mode if the line starts with `[`
+                elif char is '[':
+                    self.state_ = State.LINK
                 else:
-                    print "Char: '%s', Isspace: %s, Peek: '%s'" % (char, char.isspace(), proc.peek(3))
                     self.state_ = State.TEXT
 
             # When we hit the first space after the wrapping point, call
             # `wrap()` to process the current string, then add the
             # character.
-            if ((self.state_ is State.EOF or char.isspace()) and
-                len(self.line_) > self.columns_):
+
+            if ((len(self.line_) > self.columns_) and
+                (self.state_ in [State.EOF, State.EOF_NOWRAP] or
+                 char.isspace())):
                 self.wrap()
 
-            if self.state_ in [State.TEXT, State.PREFORMATTED]:
+            if self.state_ in [State.TEXT, State.PREFORMATTED, State.LINK]:
                 # If we've grabbed a newline character, we're done with this
                 # line. Strip trailing whitespace, save it off and start
                 # another. Don't append this newline to the output if we've
