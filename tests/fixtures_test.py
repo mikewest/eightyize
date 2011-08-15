@@ -90,6 +90,8 @@ class TestColumnizer(unittest.TestCase):
 #
 # Markdown
 #
+
+# Unordered Lists
     def test_unordered_list(self):
         self.columnize('unordered-list',
                        'Unordered lists should be properly wrapped.')
@@ -108,6 +110,26 @@ class TestColumnizer(unittest.TestCase):
         self.columnize('unordered-list-then-text',
                        'Multiple unordered list items with normal text.')
 
+# Ordered Lists
+    def test_ordered_list(self):
+        self.columnize('ordered-list',
+                       'ordered lists should be properly wrapped.')
+
+    def test_ordered_list_multiple(self):
+        self.columnize('ordered-list-multiple',
+                       ('Multiple ordered list items should be properly '
+                        'wrapped.'))
+
+    def test_ordered_list_multiple_nospace(self):
+        self.columnize('ordered-list-multiple-nospace',
+                       ('Multiple ordered list items without breaking '
+                        'newlinesshould be properly wrapped.'))
+
+    def test_ordered_list_then_text(self):
+        self.columnize('ordered-list-then-text',
+                       'Multiple ordered list items with normal text.')
+
+# Preformatted Text, Links
     def test_text_then_pre(self):
         self.columnize('text-then-pre',
                        'Text followed by preformatted text.')

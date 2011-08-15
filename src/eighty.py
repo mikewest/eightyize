@@ -57,7 +57,7 @@ class Columnizer(object):
             self.state_ in [State.PREFORMATTED, State.LINK, State.EOF_NOWRAP]):
             return []
 
-        index = "".join(self.line_[:self.columns_]).rfind(' ')
+        index = "".join(self.line_[:self.columns_+1]).rfind(' ')
         if index is not -1:
             if self.state_ in [State.TEXT, State.EOF]:
                 self.output_.append("".join(self.line_[:index]).rstrip())
@@ -93,8 +93,8 @@ class Columnizer(object):
                 
                 # Switch to ordered-list mode if the character is a series of
                 # digits followed by a period, followed by a space.
-                # elif TODO:
-                #   self.state_ = State.UNORDERED_LIST
+                elif char.isdigit():
+                   self.state_ = State.ORDERED_LIST
 
                 # Switch to preformatted mode if the line starts with at least
                 # four spaces.
@@ -130,7 +130,7 @@ class Columnizer(object):
                 # to the current line, and move on to the next character.
                 else:
                     self.line_.append(char)
-            elif self.state_ is State.UNORDERED_LIST:
+            elif self.state_ in [State.UNORDERED_LIST, State.ORDERED_LIST]:
                 if char == '*' and len(self.line_) is 0:
                     # Set up proper spacing
                     if len(self.output_) and self.output_[-1] is not "":
@@ -138,6 +138,21 @@ class Columnizer(object):
                     self.line_ = [ '*', ' ', ' ', ' ']
                     while proc.peek().isspace():
                         proc.next()
+                elif char.isdigit() and len(self.line_) is 0:
+                    # Set up proper spacing
+                    if len(self.output_) and self.output_[-1] is not "":
+                        self.output_.append("")
+                    self.line_.append(char)
+                    spaces = 4
+                    while proc.peek().isdigit() or proc.peek() is '.':
+                        self.line_.append(proc.next())
+                        spaces -= 1
+                    while proc.peek().isspace():
+                        proc.next()
+                        spaces -= 1
+                    while spaces:
+                        self.line_.append(' ')
+                        spaces -= 1
                 elif char == '\n':
                     if len(self.line_) is 0 and self.output_[-1] is "":
                         self.state_ = State.TEXT
