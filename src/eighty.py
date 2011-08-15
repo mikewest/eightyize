@@ -13,12 +13,13 @@ class State(object):
     TEXT = 0
     UNORDERED_LIST = 1
     ORDERED_LIST = 2
-    EOF = 3
+    PREFORMATTED = 3
+    EOF = 4
 
 class TextProcessor(object):
     EOF = -1
     def __init__(self, text):
-        self.text_ = text
+        self.text_ = text.expandtabs(4)
         self.max_pos_ = len(self.text_)
         self.index_ = -1
         
@@ -48,7 +49,13 @@ class Columnizer(object):
         self.wrapped_line_ = False
 
     def wrap(self):
-        if len(self.line_) <= self.columns_:
+        # Return straight away if we're either in Preformatted mode, or the
+        # line is shorter than the desired column length.
+        if (len(self.line_) <= self.columns_ or
+            self.state_ is State.PREFORMATTED):
+            return []
+
+        if self.state_ is State.PREFORMATTED:
             return []
 
         index = "".join(self.line_[:self.columns_]).rfind(' ')
@@ -79,10 +86,21 @@ class Columnizer(object):
                   (len(self.line_) is 0 and self.output_[-1] is "")):
                 # Switch to unordered-list mode if the character is '*',
                 # and the next character is whitespace.
-                if (len(self.line_) is 0 and char is '*' and
-                    proc.peek().isspace()):
+                if char is '*' and proc.peek().isspace():
                     self.state_ = State.UNORDERED_LIST
+                
+                # Switch to ordered-list mode if the character is a series of
+                # digits followed by a period, followed by a space.
+                # elif TODO:
+                #   self.state_ = State.UNORDERED_LIST
+
+                # Switch to preformatted mode if the line starts with at least
+                # four spaces.
+                elif char.isspace() and proc.peek(3) == '   ':
+                    print "Preformatted!"
+                    self.state_ = State.PREFORMATTED
                 else:
+                    print "Char: '%s', Isspace: %s, Peek: '%s'" % (char, char.isspace(), proc.peek(3))
                     self.state_ = State.TEXT
 
             # When we hit the first space after the wrapping point, call
@@ -92,7 +110,7 @@ class Columnizer(object):
                 len(self.line_) > self.columns_):
                 self.wrap()
 
-            if self.state_ is State.TEXT:
+            if self.state_ in [State.TEXT, State.PREFORMATTED]:
                 # If we've grabbed a newline character, we're done with this
                 # line. Strip trailing whitespace, save it off and start
                 # another. Don't append this newline to the output if we've
@@ -139,6 +157,12 @@ def main(argv=None):
                       default=False,
                       help="Verbose mode")
 
+    parser.add_option("-i", "--input",
+                      action="store",
+                      dest="input",
+                      default=None,
+                      help="Which file should be processed? Defaults to stdin if no input file is provided.")
+
     parser.add_option("-c", "--columns",
                       action="store",
                       dest="columns",
@@ -147,9 +171,13 @@ def main(argv=None):
 
     (options, args) = parser.parse_args()
 
-    stdin = sys.stdin.read().rstrip()
+    if options.input:
+        with open(options.input, 'r') as f:
+            text = f.read().rstrip()
+    else:
+        text = sys.stdin.read().rstrip()
     c = Columnizer(cols=options.columns)
-    print c.columnize(stdin)
+    print c.columnize(text)
  
 
 if __name__ == "__main__":

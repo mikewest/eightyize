@@ -1,0 +1,5 @@
+This is text. It should be wrapped as per usual for text that runs over eighty columns in length. Nothing special here.
+
+    This, however, is preformatted text. It shouldn't be touched by the parser at all. No wrapping, no linebreak insertion.
+
+This is text again. Hooray for text.

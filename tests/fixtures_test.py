@@ -83,6 +83,10 @@ class TestColumnizer(unittest.TestCase):
         self.columnize('multiline-long',
                        'Lines over 80 characters should be wrapped.')
 
+    def test_tabs(self):
+        self.columnize('tabs',
+                       'Tabs should be expanded to four spaces.')
+
 #
 # Markdown
 #
@@ -103,3 +107,11 @@ class TestColumnizer(unittest.TestCase):
     def test_unordered_list_then_text(self):
         self.columnize('unordered-list-then-text',
                        'Multiple unordered list items with normal text.')
+
+    def test_text_then_pre(self):
+        self.columnize('text-then-pre',
+                       'Text followed by preformatted text.')
+
+    def test_text_then_multiline_pre(self):
+        self.columnize('text-then-multiline-pre',
+                       'Text followed by multiple lines of preformatted text.')
