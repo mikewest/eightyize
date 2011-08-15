@@ -7,6 +7,7 @@ import os
 import errno
 import sys
 import re
+from optparse import OptionParser
 
 class State(object):
     TEXT = 0
@@ -63,8 +64,6 @@ class Columnizer(object):
                 self.line_ = [' ', ' ', ' ', ' ']
                 self.line_.extend(temp)
                 self.wrapped_line_ = True
-
-
 
     def columnize(self, text):
         proc = TextProcessor(text)
@@ -126,3 +125,32 @@ class Columnizer(object):
 
         self.output_.append("".join(self.line_).rstrip())
         return "\n".join(self.output_).rstrip()
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    default_root = os.path.dirname(os.path.abspath(__file__))
+
+    parser = OptionParser(usage="Usage: %prog [options]", version="%prog 0.1")
+    parser.add_option("--verbose",
+                      action="store_true",
+                      dest="verbose_mode",
+                      default=False,
+                      help="Verbose mode")
+
+    parser.add_option("-c", "--columns",
+                      action="store",
+                      dest="columns",
+                      default=80,
+                      help="How many columns should the output file contain?")
+
+    (options, args) = parser.parse_args()
+
+    stdin = sys.stdin.read().rstrip()
+    c = Columnizer(cols=options.columns)
+    print c.columnize(stdin)
+ 
+
+if __name__ == "__main__":
+    sys.exit(main())
